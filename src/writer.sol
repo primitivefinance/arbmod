@@ -9,8 +9,11 @@ pragma solidity ^0.8.17;
 contract Writer {
     string private _test_string;
 
+    event WasWritten(string test_string);
+
     function echoString(string memory test_string) public returns (string memory) {
         _test_string = test_string;
+        emit WasWritten(test_string);
         return _test_string;
     }
     
