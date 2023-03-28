@@ -3,7 +3,7 @@
 pragma solidity ^0.8.17;
 // import "solmate/utils/FixedPointMathLib.sol"; // This import is correct given Arbiter's foundry.toml
 import "../../portfolio/lib/solmate/src/utils/FixedPointMathLib.sol"; // This import goes directly to the contract
-import "./erc20_contracts/erc20/contracts/ERC20.sol";
+import "../../openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 /**
  * @dev Implementation of the test interface for Arbiter writing contracts.
@@ -36,8 +36,7 @@ contract LiquidExchange {
     }
 
     event PriceChange(uint256 price);
-    // TODO: This event may not really be necessary.
-    event SwapOccured(address token_in, uint256 amount_in, address token_out, uint256 amount_out);
+    event Swap(address token_in, address token_out, uint256 amount_in, uint256 amount_out, address to);
 
     // Admin only function to set the price of x in terms of y
     function setPrice(uint256 _price) public onlyAdmin {
@@ -53,23 +52,24 @@ contract LiquidExchange {
     // TODO: This function is NOT completed yet. It is just a placeholder for now.
     function swap(address _token_in_address, uint256 _amount_in) public {
         uint256 amount_out;
-        ERC20 token_out;
         address token_out_address;
         if (_token_in_address == arbiter_token_x_address) {
             // amount_out = FixedPointMathLib.mulWadDown(_amount_in, price);
             amount_out = _amount_in * price;
-            token_out = arbiter_token_y;
-            // TODO: Transfer amount_out of arbiter_token_y to msg.sender
-            token_out.transfer(msg.sender, amount_out);
-
-            // consider minting here
+            // Set allowances
+            // arbiter_token_x.increaseAllowance(msg.sender, _amount_in);
+            // arbiter_token_y.increaseAllowance(admin, amount_out); //might not be necessary if we increase the allowance for the manager outside of this
+            // Transfer amount in and amount out
+            arbiter_token_x.transferFrom(msg.sender, admin, _amount_in);
+            arbiter_token_y.transferFrom(admin, msg.sender, amount_out);
         } else if (_token_in_address == arbiter_token_y_address) {
             amount_out = FixedPointMathLib.divWadDown(_amount_in, price);
-            token_out = arbiter_token_x;
-            // TODO: Transfer amount_out of arbiter_token_x to msg.sender
+            // Transfer amount in and amount out
+            arbiter_token_y.transferFrom(msg.sender, admin, _amount_in);
+            arbiter_token_x.transferFrom(admin, msg.sender, amount_out);
         } else {
             revert("Invalid token");
         }
-        emit SwapOccured(_token_in_address, _amount_in, token_out_address, amount_out);    
+        emit Swap(_token_in_address, token_out_address, _amount_in, amount_out, msg.sender);    
     }
 }
