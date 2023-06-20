@@ -1,7 +1,7 @@
 pragma solidity ^0.8.17;
 import "solmate/utils/FixedPointMathLib.sol";
-import "portfolio/lib/solstat/src/Gaussian.sol";
-import "portfolio/lib/solstat/src/Invariant.sol";
+import "solstat/Gaussian.sol";
+import "solstat/Invariant.sol";
 
 contract ArbiterMath {
     using FixedPointMathLib for int256;
